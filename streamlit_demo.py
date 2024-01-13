@@ -2,18 +2,25 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# Load EPL teams data from CSV
-file_path = "C:/Users/damia/Desktop/Web_Mining_Project/full_data.csv"
-epl_teams_df = pd.read_csv(file_path)
-epl_teams_dfcsv = pd.read_csv(file_path)
-file_path = "C:/Users/damia/Desktop/Web_Mining_Project/imgurls.csv"
-img_teams_df = pd.read_csv(file_path)
-file_path = "C:/Users/damia/Desktop/Web_Mining_Project/2023_matches.csv"
-update_teams_df = pd.read_csv(file_path)
-file_path = "C:/Users/damia/Desktop/Web_Mining_Project/end_tables.csv"
-end_standings = pd.read_csv(file_path)
-file_path = "C:/Users/damia/Desktop/Web_Mining_Project/fresh_table.csv"
-current_standings = pd.read_csv(file_path)
+# Defining file names
+epl_teams_csv = "full_data.csv"
+img_teams_csv = "imgurls.csv"
+update_teams_csv = "2023_matches.csv"
+end_standings_csv = "end_tables.csv"
+current_standings_csv = "fresh_table.csv"
+
+# Loading EPL teams data
+epl_teams_df = pd.read_csv(epl_teams_csv)
+# Loading image URLs
+img_teams_df = pd.read_csv(img_teams_csv)
+# Loading 2023 matches data
+update_teams_df = pd.read_csv(update_teams_csv)
+# Loading end tables data
+end_standings = pd.read_csv(end_standings_csv)
+# Loading fresh table data
+current_standings = pd.read_csv(current_standings_csv)
+
+
 
 epl_teams_df = pd.concat([update_teams_df, epl_teams_df], ignore_index=True)
 epl_teams_df = epl_teams_df.drop_duplicates(subset=["team", "date"], keep="first")
