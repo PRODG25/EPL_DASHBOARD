@@ -1,3 +1,4 @@
 plotly==5.3.1
 statsmodels==0.13.1 
+pandas>=1.0.0
 # Add other dependencies as needed
