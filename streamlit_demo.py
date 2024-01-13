@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from pandas.core.indexes import Int64Index
+
 
 # Defining file names
 epl_teams_csv = "full_data.csv"
