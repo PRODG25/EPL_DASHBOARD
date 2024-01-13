@@ -1,0 +1,2 @@
+plotly==5.3.1
+# Add other dependencies as needed
