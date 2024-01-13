@@ -399,7 +399,7 @@ def main():
 
     date = st.sidebar.date_input("Select a Date", pd.to_datetime("today"))
     user_input = date.strftime("%Y%m%d")
-    city_name = st.sidebar.text_input("Enter the name and country of the city:", "London England")
+    city_name = st.sidebar.text_input("Enter the name and country of the city (separated by comma):", "London, England")
     
 
     if st.sidebar.button("Find Matches"):
