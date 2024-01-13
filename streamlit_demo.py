@@ -410,8 +410,6 @@ def main():
         import pandas as pd
         from datetime import datetime, timedelta
         import re
-        import tkinter as tk
-        from tkinter import simpledialog
         from datetime import datetime
         import streamlit as st
         import requests
