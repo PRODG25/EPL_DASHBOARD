@@ -3,26 +3,21 @@ import pandas as pd
 import plotly.express as px
 
 
-# Defining file names
+# Defining CSV file names with scraped data
 epl_teams_csv = "full_data.csv"
 img_teams_csv = "imgurls.csv"
 update_teams_csv = "2023_matches.csv"
 end_standings_csv = "end_tables.csv"
 current_standings_csv = "fresh_table.csv"
 
-# Loading EPL teams data
+# Loading data from CSV files into dataframes
 epl_teams_df = pd.read_csv(epl_teams_csv)
-# Loading image URLs
 img_teams_df = pd.read_csv(img_teams_csv)
-# Loading 2023 matches data
 update_teams_df = pd.read_csv(update_teams_csv)
-# Loading end tables data
 end_standings = pd.read_csv(end_standings_csv)
-# Loading fresh table data
 current_standings = pd.read_csv(current_standings_csv)
 
-
-
+# Data Cleaning and Transformation:
 epl_teams_df = pd.concat([update_teams_df, epl_teams_df], ignore_index=True)
 epl_teams_df = epl_teams_df.drop_duplicates(subset=["team", "date"], keep="first")
 epl_teams_df['season'] = epl_teams_df['season'].astype(str)
@@ -31,23 +26,29 @@ epl_teams_df['secondpartseason'] = (epl_teams_df['season'].str[-2:].astype(int) 
 epl_teams_df['season'] = epl_teams_df['season'] + '/' + epl_teams_df['secondpartseason']
 epl_teams_df = pd.merge(epl_teams_df, img_teams_df, on="team", how="left")
 
-
+# Calculate points gathered each matchweek.
 epl_teams_df['points_added'] = epl_teams_df['result'].map({'W': 3, 'D': 1}).fillna(0)
-
+# Concatenate and clean up the standings DataFrame.
 epl_teams_standings = pd.concat([end_standings, current_standings], ignore_index=True)
 epl_teams_standings = epl_teams_standings.rename(columns={'Season': 'season'})
 epl_teams_standings['season'] = epl_teams_standings['season'].str.replace(' ', '')
 epl_teams_standings['season'] = epl_teams_standings['season'].str.replace(',', '')
-
+# Rename columns, clean team names, and merge with the main DataFrame.
 epl_teams_standings.rename(columns={'Squad': 'team'}, inplace=True)
 epl_teams_standings['team'] = epl_teams_standings['team'].str.replace('Utd', 'United').str.replace("Nottingham Forest", "Nott'ham Forest").str.replace("West Brom", "West Bromwich Albion").str.replace("Tottenham", "Tottenham Hotspur")
 epl_teams_df = pd.merge(epl_teams_standings, epl_teams_df, on=['season', 'team'], how='right')
 
-
+#Defining URLs for icons used in the dashboard 
 goal_img = "https://th.bing.com/th/id/OIP.z0AsMeV8Ihpi-VYoos-_HQAAAA?rs=1&pid=ImgDetMain"
 prem_img = "https://th.bing.com/th/id/OIP.0kVszlE6KlGBYZFrH_q7mQHaEK?rs=1&pid=ImgDetMain"
 xg_img = "https://th.bing.com/th/id/OIP.C5gn6IJnBKmcKeWJriBLqQHaHw?w=920&h=963&rs=1&pid=ImgDetMain"
 xga_img = "https://cdn0.iconfinder.com/data/icons/business-analytics-5/96/Picture19-512.png"
+
+
+# Function to filter the EPL teams DataFrame based on selected team and season.
+# If a specific team is selected, filter rows accordingly.
+# If a specific season (other than 'All seasons') is selected, filter rows based on the season.
+# Returns the filtered DataFrame.
 def filter_team(selected_team, selected_season):
     filtered_teams = epl_teams_df.copy()
 
@@ -59,28 +60,22 @@ def filter_team(selected_team, selected_season):
 
     return filtered_teams
 
+# Function to process and format standing data from a team DataFrame.
+# Extracts position and converts it to a human-readable format.
+# Determines an appropriate image URL based on the team's position.
+# Extracts total points and points per match for further use.
 def standing_data(team_df):
 
     position = team_df['Rk'].astype(int).iloc[0]
-    # Convert position to the desired format
-    img_url1 = "https://th.bing.com/th/id/OIP.NmGSphVoXZ0XgIZ23z02vAHaIV?rs=1&pid=ImgDetMain"
-    img_url2 = "https://th.bing.com/th/id/OIP.UoA5w19I3WJ0abbkjw8-SQHaF7?w=1280&h=1024&rs=1&pid=ImgDetMain"
-    img_url3 = "https://th.bing.com/th/id/OIP.8mjtxkyaLTi6OMqmg31dmwHaM1?rs=1&pid=ImgDetMain"
-    img_url4 = "https://th.bing.com/th/id/OIP.QnAbd-eyJ_Nn3W5AWIs4wAHaHa?rs=1&pid=ImgDetMain"
-
 
     if position == 1:
         position_str = '1st'
-        img_url = img_url1
     elif position == 2:
         position_str = '2nd'
-        img_url = img_url2
     elif position == 3:
         position_str = '3rd'
-        img_url = img_url3
     else:
         position_str = f'{position}th'
-        img_url = None
 
     points = team_df['Pts'].astype(int).iloc[0]
     points_per_match = team_df['Pts/MP'].iloc[0]
@@ -92,7 +87,7 @@ def standing_data(team_df):
     col3.metric("Points per Match", points_per_match)
 
 
-
+# Function to create a scatter plot and calculate the correlation coefficient
 def correelation_pass_poss(team_df):
 
     # Scatter plot with correlation coefficient
@@ -107,7 +102,8 @@ def correelation_pass_poss(team_df):
 
     # Show the plot
     st.plotly_chart(fig)
-
+    
+# Function to create a scatter plot and calculate the correlation coefficient
 def correlation_goals_cmp(team_df): 
     # Scatter plot with correlation coefficient
     fig = px.scatter(
@@ -121,7 +117,8 @@ def correlation_goals_cmp(team_df):
 
     # Show the plot in Streamlit app
     st.plotly_chart(fig)
-
+    
+# Function to create a scatter plot and calculate the correlation coefficient
 def correlation_goals_xg(team_df):
     # Scatter plot with correlation coefficient
     fig = px.scatter(
@@ -133,7 +130,8 @@ def correlation_goals_xg(team_df):
         trendline='ols',  # Ordinary Least Squares regression line
     )
     st.plotly_chart(fig)
-
+    
+# Function to create a scatter plot and calculate the correlation coefficient
 def correlation_poss_ga(team_df):
     # Scatter plot with correlation coefficient
     fig = px.scatter(
@@ -146,6 +144,7 @@ def correlation_poss_ga(team_df):
     )
     st.plotly_chart(fig)
 
+# Function to create a scatter plot and calculate the correlation coefficient
 def correlation_poss_gf(team_df):
     # Scatter plot with correlation coefficient
     fig = px.scatter(
@@ -158,6 +157,14 @@ def correlation_poss_gf(team_df):
     )
     st.plotly_chart(fig)
 
+
+
+# Function to create a dashboard using Streamlit for a given team DataFrame.
+# Display basic statistics, including total goals scored, total goals conceded, expected goals (xG), and expected goals conceded (xGA).
+# Display a stacked horizontal bar chart comparing average possession and average opponent possession.
+# Uses Plotly Express library for visualization with custom colors and formatting.
+# Display a pie chart illustrating the percentage of successful and unsuccessful passes.
+# Uses Plotly Express library for visualization with a hole in the center for improved clarity.
 def create_dashboard(team_df):
 
     st.subheader(f'Basic Stats')
@@ -248,6 +255,13 @@ def create_dashboard(team_df):
     # Show the chart
     st.plotly_chart(fig2)
 
+# Function to create a dashboard for all seasons using Streamlit for a given team DataFrame.
+# Display basic statistics, including total goals scored and total goals conceded.
+# Utilizes Streamlit columns and metric elements for a visually appealing layout.
+# Display a stacked horizontal bar chart comparing average possession and average opponent possession.
+# Uses Plotly Express library for visualization with custom colors and formatting.
+# Display a pie chart illustrating the percentage of successful and unsuccessful passes.
+# Uses Plotly Express library for visualization with a hole in the center for improved clarity.
 
 def create_dashboard_allseasons(team_df):
 
@@ -332,7 +346,7 @@ def create_dashboard_allseasons(team_df):
     # Show the chart
     st.plotly_chart(fig2)
 
-
+# Function to create a line chart representing the cumulative points for a team across matchweeks.
 def create_points_chart(team_df):
     st.subheader(f'Points Chart for {team_df["team"].iloc[0]} in {team_df["season"].iloc[0]}')
 
@@ -348,8 +362,7 @@ def create_points_chart(team_df):
 
 
 
-
-
+# Function to create an indicator for the last 5 matches' results.
 def create_form_indicator(team_df):
     st.subheader('Last 5 Matches')
 
@@ -365,10 +378,11 @@ def create_form_indicator(team_df):
     st.markdown(form_indicator_html, unsafe_allow_html=True)
 
 
-# Streamlit App
+# Streamlit App - Main
 def main():
     import streamlit as st
     import pandas as pd
+    
     # Sidebar with team dropdown and season dropdown
     sorted_teams = sorted(epl_teams_df['team'].unique())
     selected_team = st.sidebar.selectbox('Select team', [''] + sorted_teams, format_func=lambda x: x.upper())
@@ -387,24 +401,16 @@ def main():
 
     st.sidebar.markdown(button_html, unsafe_allow_html=True)
 
-    # JavaScript function to handle button click
-    st.markdown("""
-    <script>
-        function matchFinderClicked() {
-            // Code for MatchFinder functionality goes here
-            alert("MatchFinder button clicked!");
-        }
-    </script>
-    """, unsafe_allow_html=True)
+    # Creating input fields for Match Finder
 
     date = st.sidebar.date_input("Select a Date", pd.to_datetime("today"))
     user_input = date.strftime("%Y%m%d")
     city_name = st.sidebar.text_input("Enter the name and country of the city (separated by comma):", "London, England")
     
-
+    
     if st.sidebar.button("Find Matches"):
 
-        # Import libraries
+        # Import libraries an making a request to a website
         import requests
         from bs4 import BeautifulSoup
         import pandas as pd
@@ -418,11 +424,6 @@ def main():
         from datetime import datetime, timedelta
         from geopy.geocoders import Nominatim
         from geopy.distance import geodesic
-
-        # Get user input for the date
-        
-
-        # Display the input
         
         
         url = f'https://www.espn.in/football/fixtures/_/date/{user_input}'
@@ -464,12 +465,12 @@ def main():
         time_format = '%I:%M %p'
         df['Time'] = pd.to_datetime(df['Time'], format=time_format, errors='coerce')
         df = df.dropna(subset=['Time'])
-        # Subtract 1.5 hours from the datetime values
+        # Subtract 1.5 hours from the datetime values (adjust the time zone to CEE)
         df['Time'] = df['Time'] - timedelta(hours=3, minutes=30)
         df['Time'] = df['Time'].dt.strftime(time_format)
 
         df = df.dropna(subset=['Time'])
-            # Format the datetime values back to the original time format
+        # Format the datetime values back to the original time format
 
         df[['Stadium', 'City', 'Country']] = df['Location'].str.split(',', expand=True, n=2)
         df = df.drop(columns=["Location"])
@@ -497,10 +498,7 @@ def main():
         # Initialize the geolocator
         geolocator = Nominatim(user_agent="stadium_coordinates")
 
-        # Load your table into a DataFrame
-        # Replace 'stadiums.csv' with the actual path to your CSV file
-
-
+     
         # Create empty lists to store the latitude and longitude
         latitudes = []
         longitudes = []
@@ -516,7 +514,7 @@ def main():
                 latitudes.append(None)
                 longitudes.append(None)
 
-        # Add the latitude and longitude columns to your DataFrame
+        # Add the latitude and longitude columns to DataFrame
         df['Latitude'] = latitudes
         df['Longitude'] = longitudes
 
@@ -537,13 +535,13 @@ def main():
         # Create an empty list to store the distances
         distances = []
 
-        # Iterate through the rows of the DataFrame and calculate distances
+        # Iterate through the rows of the dataframe and calculate distances
         for index, row in data.iterrows():
             stadium_location = (row['Latitude'], row['Longitude'])
             distance = geodesic(your_location.point, stadium_location).kilometers
             distances.append(distance)
 
-        # Add the distances column to your DataFrame
+        # Add the distances column to dataframe
         data['Distance (km)'] = distances
 
         data_sorted = data.sort_values(by='Distance (km)')
@@ -626,7 +624,7 @@ def main():
             goal_scatter_plot = px.scatter(epl_teams_standings_filtered, x='GF', y='GA', text='Team', title='Goals For vs. Goals Against')
             st.plotly_chart(goal_scatter_plot)
 
-            # Goal For vs. Goal Against Scatter Plot
+            # Goal For vs. Expected Goals Scatter Plot
             st.write("Goals Scored vs. Expected Goals:")
             goal_scatter_plot = px.scatter(epl_teams_standings_filtered, x='xG', y='GF', text='Team', title='Goals For vs. Expected Goals')
             st.plotly_chart(goal_scatter_plot)
